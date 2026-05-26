@@ -50,10 +50,8 @@ fun MonthlyTargetScreen(
 
 
         LaunchedEffect(spent, monthlyTarget) {
-            // You will need to pass preferencesManager into this Screen's parameters to use this!
             preferencesManager.setTrackedSpentThisMonth(spent)
 
-            // Also trigger the warning if we hit it while the app is actually open
             if (monthlyTarget > 0 && spent >= (monthlyTarget / 2)) {
                 if (!preferencesManager.isHalfwayWarningSent()) {
                     notificationHelper.showHalfwayWarning(spent, monthlyTarget)

@@ -21,7 +21,6 @@ class SmsReceiver : BroadcastReceiver() {
 
                     var expenseAmount = 0f
 
-                    // 1. Check if it's a Standard Expense (and NOT an income/credit)
                     val amountRegex = Regex("([\\d.,]+)\\s*[EΕ]UR|[EΕ]UR\\s*([\\d.,]+)", RegexOption.IGNORE_CASE)
                     val amountMatch = amountRegex.find(body)
 
@@ -30,7 +29,6 @@ class SmsReceiver : BroadcastReceiver() {
                         expenseAmount = rawAmount.replace(".", "").replace(",", ".").toFloatOrNull() ?: 0f
                     }
 
-                    // 2. Check if it's a Direct Transfer Expense
                     if (body.contains("AMEΣH METAΦOPA", ignoreCase = true)) {
                         val transferMatch = Regex("€\\s*([\\d.,]+)").find(body)
                         if (transferMatch != null) {
@@ -38,14 +36,12 @@ class SmsReceiver : BroadcastReceiver() {
                         }
                     }
 
-                    // 3. If we spent money, add it to our background tracker and check target
                     if (expenseAmount > 0f) {
                         prefs.addTrackedExpense(expenseAmount)
 
                         val currentSpent = prefs.getTrackedSpentThisMonth()
                         val target = prefs.getMonthlyTarget()
 
-                        // If we crossed the 50% line and haven't been warned yet this month
                         if (target > 0 && currentSpent >= (target / 2)) {
                             if (!prefs.isHalfwayWarningSent()) {
                                 notificationHelper.showHalfwayWarning(currentSpent, target)

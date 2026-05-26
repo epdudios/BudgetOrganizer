@@ -21,7 +21,7 @@ class SmsParser(private val context: Context) {
 
         val cursor = context.contentResolver.query(uri, projection, null, null, "date DESC")
 
-        // Used for messages that don't have a date in the body (like transfers)
+        // Used for messages that don't have a date in the body
         val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
@@ -37,7 +37,7 @@ class SmsParser(private val context: Context) {
                     val body = it.getString(bodyIndex) ?: ""
                     val timestampMillis = it.getLong(dateIndex)
 
-                    // 1. Check for Type 2: Direct Transfer (Expense)
+
                     if (body.contains("AMEΣH METAΦOPA", ignoreCase = true)) {
                         val amountMatch = Regex("€\\s*([\\d.,]+)").find(body)
                         val merchantMatch = Regex("ΔIKAIOYXO (.*)").find(body)
@@ -58,11 +58,10 @@ class SmsParser(private val context: Context) {
                                     timestampMillis
                                 )
                             )
-                            continue // skip the rest and move to next SMS
+                            continue
                         }
                     }
 
-                    // 2. Check for Type 3: Credit / Refund (Sudden Income)
                     if (body.contains("ΠIΣTΩΣH", ignoreCase = true)) {
                         val amountMatch = Regex("EUR\\s*([\\d.,]+)", RegexOption.IGNORE_CASE).find(body)
                         val dateTimeMatch = Regex("(\\d{2}/\\d{2}/\\d{4})\\s+(\\d{2}:\\d{2})").find(body)
@@ -70,7 +69,7 @@ class SmsParser(private val context: Context) {
 
                         if (amountMatch != null && dateTimeMatch != null && merchantMatch != null) {
                             val amountRaw = amountMatch.groupValues[1].replace(".", "").replace(",", ".")
-                            // Prepend a minus sign! This subtracts from "spent", adding to the budget.
+
                             val amount = "-$amountRaw"
                             val date = dateTimeMatch.groupValues[1]
                             val time = dateTimeMatch.groupValues[2]
@@ -89,7 +88,6 @@ class SmsParser(private val context: Context) {
                         }
                     }
 
-                    // 3. Fallback to Type 1: Standard Expense (Original Logic)
                     val amountRegex = Regex("([\\d.,]+)\\s*[EΕ]UR|[EΕ]UR\\s*([\\d.,]+)", RegexOption.IGNORE_CASE)
                     val dateTimeRegex = Regex("(\\d{2}/\\d{2}/\\d{4})\\s+(\\d{2}:\\d{2})")
                     val merchantRegex = Regex("@\\s*(.*?)(?:ΔΙΑΘΕΣΙΜΟ|\$)", RegexOption.IGNORE_CASE)
