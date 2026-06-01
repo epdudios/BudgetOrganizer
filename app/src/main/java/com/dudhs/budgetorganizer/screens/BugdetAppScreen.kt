@@ -9,17 +9,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.dudhs.budgetorganizer.LifeSavingsLogic
+import com.dudhs.budgetorganizer.dataClasses.BudgetStateDataClass
+import com.dudhs.budgetorganizer.helpers.LifeSavingsLogic
 import com.dudhs.budgetorganizer.helpers.NotificationHelper
 import com.dudhs.budgetorganizer.PreferencesManager
-import com.dudhs.budgetorganizer.helpers.Transaction
+import com.dudhs.budgetorganizer.dataClasses.TransactionDataClass
 
 @Composable
 fun BudgetAppScreen(
-    transactions: List<Transaction>,
+    transactions: List<TransactionDataClass>,
     preferencesManager: PreferencesManager,
-    notificationHelper: NotificationHelper
-
+    notificationHelper: NotificationHelper,
+    onTransactionClick: (TransactionDataClass) -> Unit
     //onExportClick: () -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -33,6 +34,20 @@ fun BudgetAppScreen(
     val estimatedBankBalance by remember(transactions, currentSalary, currentSuddenIncome, currentSuddenExpense) {
         derivedStateOf { lifeSavingsLogic.calculateTotalLifeSavings(transactions) }
     }
+    var isManualRefresh by remember { mutableStateOf(preferencesManager.isManualRefreshEnabled()) }
+    var effectiveStartMillis by remember { mutableLongStateOf(preferencesManager.getEffectiveStartMillis()) }
+
+    val uiState = BudgetStateDataClass(
+        transactions = transactions,
+        baseSalary = currentSalary,
+        suddenIncome = currentSuddenIncome,
+        suddenExpense = currentSuddenExpense,
+        monthlyTarget = currentMonthlyTarget,
+        estimatedBankBalance = estimatedBankBalance,
+        chartStyle = currentChartStyle,
+        effectiveStartMillis = effectiveStartMillis,
+        isManualRefresh = isManualRefresh
+    )
 
     Scaffold(
         bottomBar = {
@@ -58,48 +73,28 @@ fun BudgetAppScreen(
             }
         }
     ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
             when (selectedTab) {
-                0 -> {
-                    BudgetPieChart(
-                        allTransactions = transactions,
-                        baseSalary = currentSalary,
-                        suddenIncome = currentSuddenIncome,
-                        suddenExpense = currentSuddenExpense,
-                        estimatedBankBalance = estimatedBankBalance,
-                        chartStyle = currentChartStyle
-                    )
-                }
-                1 -> {
-                    MonthlyTargetScreen(
-                        transactions,
-                        currentMonthlyTarget,
-                        notificationHelper,
-                        preferencesManager,
-                        chartStyle = currentChartStyle
-                    )
-                    // Button(onClick = onExportClick) { Text("Process & Export Data") }
-                }
-                2 -> {
-                    SettingsScreen(
-                        salary = currentSalary,
-                        suddenIncome = currentSuddenIncome,
-                        suddenExpense = currentSuddenExpense,
-                        monthlyTarget = currentMonthlyTarget,
-                        chartStyle = currentChartStyle,
-                        onSalaryChange = { preferencesManager.setSalary(it); currentSalary = it },
-                        onAddIncome = { preferencesManager.addSuddenIncome(it); currentSuddenIncome += it },
-                        onAddExpense = { preferencesManager.addSuddenExpense(it); currentSuddenExpense += it },
-                        onMonthlyTarget = { preferencesManager.setMonthlyTarget(it); currentMonthlyTarget = it },
-                         onChartStyleChange = { newStyle -> currentChartStyle = newStyle; preferencesManager.setChartStyle(newStyle.name) }
-                    )
+                // LOOK HOW CLEAN THIS IS NOW!
+                0 -> MainBudgetScreen(uiState = uiState)
+                1 -> MonthlyTargetScreen(
+                    uiState = uiState,
+                    notificationHelper = notificationHelper,
+                    preferencesManager = preferencesManager,
+                    onTransactionClick = onTransactionClick
+                )
+                2 -> SettingsScreen(
+                    uiState = uiState,
+                    onSalaryChange = { preferencesManager.setSalary(it); currentSalary = it},
+                    onAddIncome = { preferencesManager.addSuddenIncome(it); currentSuddenIncome += it},
+                    onAddExpense = { preferencesManager.addSuddenExpense(it); currentSuddenExpense += it},
+                    onMonthlyTarget = { preferencesManager.setMonthlyTarget(it); currentMonthlyTarget = it},
+                    onChartStyleChange = { newStyle -> currentChartStyle = newStyle; preferencesManager.setChartStyle(newStyle.name)},
+                    onToggleManualRefresh = { enabled -> preferencesManager.setManualRefreshEnabled(enabled); isManualRefresh = enabled; effectiveStartMillis = preferencesManager.getEffectiveStartMillis()},
+                    onManualReset = { preferencesManager.performManualReset(); currentSuddenIncome = 0f; currentSuddenExpense = 0f; effectiveStartMillis = preferencesManager.getEffectiveStartMillis()}
+                )
                 }
             }
         }
     }
-}
+

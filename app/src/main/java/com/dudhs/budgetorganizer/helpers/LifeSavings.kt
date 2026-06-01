@@ -1,9 +1,11 @@
-package com.dudhs.budgetorganizer
+package com.dudhs.budgetorganizer.helpers
 
-import com.dudhs.budgetorganizer.helpers.Transaction
+import com.dudhs.budgetorganizer.PreferencesManager
+import com.dudhs.budgetorganizer.dataClasses.TransactionDataClass
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import kotlin.collections.iterator
 
 data class MonthlySavings(
     val monthName: String,
@@ -16,7 +18,7 @@ class LifeSavingsLogic(private val preferencesManager: PreferencesManager) {
      * Calculates how much money was saved each individual month.
      * Example: March 2026 -> 400€, April 2026 -> 600€
      */
-    fun calculateMonthByMonthSavings(transactions: List<Transaction>): List<MonthlySavings> {
+    fun calculateMonthByMonthSavings(transactions: List<TransactionDataClass>): List<MonthlySavings> {
         val baseSalary = preferencesManager.getSalary()
         val format = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
         val groupedTransactions = transactions.groupBy { transaction ->
@@ -39,7 +41,7 @@ class LifeSavingsLogic(private val preferencesManager: PreferencesManager) {
      * It counts every calendar month from the first parsed transaction until the current month,
      * so the value naturally changes when a new month begins even before many new transactions exist.
      */
-    fun calculateTotalLifeSavings(transactions: List<Transaction>): Float {
+    fun calculateTotalLifeSavings(transactions: List<TransactionDataClass>): Float {
         val baseSalary = preferencesManager.getSalary()
         val globalSuddenIncome = preferencesManager.getSuddenIncome()
         val globalSuddenExpense = preferencesManager.getSuddenExpense()
@@ -52,7 +54,7 @@ class LifeSavingsLogic(private val preferencesManager: PreferencesManager) {
         return (totalExpectedIncome - totalSpent).coerceAtLeast(0f)
     }
 
-    private fun calculateInclusiveMonthsFromFirstTransaction(transactions: List<Transaction>): Int {
+    private fun calculateInclusiveMonthsFromFirstTransaction(transactions: List<TransactionDataClass>): Int {
         if (transactions.isEmpty()) return 1
 
         val firstTransaction = transactions.minByOrNull { it.timestamp } ?: return 1

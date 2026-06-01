@@ -67,4 +67,42 @@ class PreferencesManager(context: Context) {
     fun setChartStyle(styleName: String) {
         prefs.edit().putString("chart_style", styleName).apply()
     }
+    // --- REFRESH LOGIC ---
+    fun isManualRefreshEnabled(): Boolean = prefs.getBoolean("manual_refresh", false)
+
+    fun setManualRefreshEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("manual_refresh", enabled).apply()
+    }
+
+    fun performManualReset() {
+        prefs.edit()
+            .putFloat("sudden_income", 0f)
+            .putFloat("sudden_expense", 0f)
+            .putFloat("tracked_spent", 0f)
+            .putBoolean("warning_sent", false)
+            .putLong("manual_reset_timestamp", System.currentTimeMillis())
+            .apply()
+    }
+
+    fun getEffectiveStartMillis(): Long {
+        return if (isManualRefreshEnabled()) {
+            prefs.getLong("manual_reset_timestamp", 0L)
+        } else {
+            java.util.Calendar.getInstance().apply {
+                set(java.util.Calendar.DAY_OF_MONTH, 1)
+                set(java.util.Calendar.HOUR_OF_DAY, 0)
+                set(java.util.Calendar.MINUTE, 0)
+                set(java.util.Calendar.SECOND, 0)
+                set(java.util.Calendar.MILLISECOND, 0)
+            }.timeInMillis
+        }
+    }
+    // --- Notification ---
+    fun getLastNotifiedTier(): Int {
+        return prefs.getInt("last_notified_tier", 0)
+    }
+
+    fun setLastNotifiedTier(tier: Int) {
+        prefs.edit().putInt("last_notified_tier", tier).apply()
+    }
 }

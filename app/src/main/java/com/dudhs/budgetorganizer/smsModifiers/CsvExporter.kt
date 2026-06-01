@@ -1,15 +1,15 @@
-package com.dudhs.budgetorganizer
+package com.dudhs.budgetorganizer.smsModifiers
 
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.FileProvider
-import com.dudhs.budgetorganizer.helpers.Transaction
+import com.dudhs.budgetorganizer.dataClasses.TransactionDataClass
 import java.io.File
 
 class CsvExporter(private val context: Context) {
 
-    fun createBudgetSpreadsheet(transactions: List<Transaction>): File {
+    fun createBudgetSpreadsheet(transactions: List<TransactionDataClass>): File {
         val fileName = "MyBudget.csv"
         val file = File(context.getExternalFilesDir(null), fileName)
         val csvData = StringBuilder()

@@ -1,7 +1,6 @@
 package com.dudhs.budgetorganizer.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -9,10 +8,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.dudhs.budgetorganizer.helpers.CalendarDates
+import com.dudhs.budgetorganizer.dataClasses.BudgetStateDataClass
+import com.dudhs.budgetorganizer.budgetComponents.MainBudgetScreenOverviewCard
 import com.dudhs.budgetorganizer.helpers.TimePeriod
-import com.dudhs.budgetorganizer.helpers.Transaction
-import com.dudhs.budgetorganizer.helpers.formatMoney
 import com.jaikeerthick.composable_graphs.composables.pie.PieChart
 import com.jaikeerthick.composable_graphs.composables.pie.model.PieData
 import java.util.Calendar
@@ -21,14 +19,9 @@ import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BudgetPieChart(
-    allTransactions: List<Transaction>,
-    baseSalary: Float,
-    suddenIncome: Float,
-    suddenExpense: Float,
-    estimatedBankBalance: Float,
-    chartStyle: ChartStyle
-) {
+fun MainBudgetScreen(
+    uiState: BudgetStateDataClass)
+{
     var selectedPeriod by remember { mutableStateOf(TimePeriod.THIS_MONTH) }
    // var selectedChartStyle by remember { mutableStateOf(BudgetChartStyle.PIE) }
     val periods = TimePeriod.values()
@@ -39,10 +32,9 @@ fun BudgetPieChart(
     val cutoff30Days = System.currentTimeMillis() - thirtyDaysInMillis
 
     val displayTransactions = when (selectedPeriod) {
-        TimePeriod.ALL_TIME -> allTransactions
-        TimePeriod.LAST_30_DAYS -> allTransactions.filter { it.timestamp >= cutoff30Days }
-        TimePeriod.THIS_MONTH -> allTransactions.filter { it.timestamp >= CalendarDates.getStartOfCurrentMonthMillis() }
-
+        TimePeriod.ALL_TIME -> uiState.transactions
+        TimePeriod.LAST_30_DAYS -> uiState.transactions.filter { it.timestamp >= cutoff30Days }
+        TimePeriod.THIS_MONTH -> uiState.transactions.filter { it.timestamp >= uiState.effectiveStartMillis }
     }
 
     val uniqueMonthsCount = if (selectedPeriod == TimePeriod.ALL_TIME && displayTransactions.isNotEmpty()) {
@@ -54,9 +46,11 @@ fun BudgetPieChart(
         1
     }
 
-    val totalBudget = (baseSalary * uniqueMonthsCount) + suddenIncome
+    val rawBudget = (uiState.baseSalary * uniqueMonthsCount) + uiState.suddenIncome
+    val totalBudget = minOf(rawBudget, uiState.estimatedBankBalance)
+
     val parsedSpent = displayTransactions.sumOf { it.amount.toDoubleOrNull() ?: 0.0 }.toFloat()
-    val spent = (parsedSpent + suddenExpense).coerceAtLeast(0f)
+    val spent = (parsedSpent + uiState.suddenExpense).coerceAtLeast(0f)
     val remaining = (totalBudget - spent).coerceAtLeast(0f)
     val progress = if (totalBudget > 0f) (spent / totalBudget).coerceIn(0f, 1f) else 0f
     val isOverBudget = totalBudget > 0f && spent > totalBudget
@@ -69,17 +63,8 @@ fun BudgetPieChart(
         PieData(value = remaining.coerceAtLeast(0.01f), label = "Remaining", color = remainingColor)
     )
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        SingleChoiceSegmentedButtonRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
         ) {
             periods.forEachIndexed { index, period ->
                 SegmentedButton(
@@ -92,51 +77,18 @@ fun BudgetPieChart(
             }
         }
 
-        ElevatedCard(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.elevatedCardColors(containerColor = colorScheme.surfaceVariant)
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Overview",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = colorScheme.primary
-                )
-                Spacer(modifier = Modifier.height(12.dp))
+        MainBudgetScreenOverviewCard(
+            estimatedBankBalance = uiState.estimatedBankBalance,
+            totalBudget = totalBudget,
+            spent = spent,
+            remaining = remaining,
+            spentColor = spentColor,
+            remainingColor = remainingColor
+        )
 
-                Text(
-                    text = "Estimated bank balance",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = formatMoney(estimatedBankBalance),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = colorScheme.onSurface
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    BudgetMetric(label = "Budget", value = formatMoney(totalBudget))
-                    BudgetMetric(label = "Spent", value = formatMoney(spent), color = spentColor)
-                    BudgetMetric(label = "Left", value = formatMoney(remaining), color = remainingColor)
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-
+//        Spacer(modifier = Modifier.height(20.dp))
+//
+//        Spacer(modifier = Modifier.height(20.dp))
         Spacer(modifier = Modifier.height(24.dp))
 
         if (isOverBudget) {
@@ -154,7 +106,7 @@ fun BudgetPieChart(
                 text = "No transactions found for this period.",
                 color = colorScheme.onSurfaceVariant
             )
-        } else if (chartStyle == ChartStyle.PIE){
+        } else if (uiState.chartStyle == ChartStyle.PIE){
             PieChart(
                 modifier = Modifier.size(250.dp),
                 data = pieChartData

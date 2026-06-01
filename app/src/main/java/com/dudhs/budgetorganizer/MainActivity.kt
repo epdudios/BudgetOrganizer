@@ -13,8 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.dudhs.budgetorganizer.helpers.NotificationHelper
-import com.dudhs.budgetorganizer.helpers.Transaction
+import com.dudhs.budgetorganizer.dataClasses.TransactionDataClass
 import com.dudhs.budgetorganizer.screens.BudgetAppScreen
+import com.dudhs.budgetorganizer.smsModifiers.SmsParser
 import com.dudhs.budgetorganizer.ui.theme.BudgetOrganizerTheme
 
 class MainActivity : AppCompatActivity() {
@@ -26,7 +27,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var prefsManager: PreferencesManager
     private lateinit var notificationHelper: NotificationHelper
 
-    private var transactionsList: List<Transaction> = emptyList()
+    private var transactionsList: List<TransactionDataClass> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,7 +55,8 @@ class MainActivity : AppCompatActivity() {
                     BudgetAppScreen(
                         transactions = transactionsList,
                         preferencesManager = prefsManager,
-                        notificationHelper = notificationHelper
+                        notificationHelper = notificationHelper ,
+                        onTransactionClick = {TODO()}
                         // onExportClick = { processAndExportData() }
                     )
                 }

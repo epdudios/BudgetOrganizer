@@ -1,8 +1,8 @@
-package com.dudhs.budgetorganizer
+package com.dudhs.budgetorganizer.smsModifiers
 
 import android.content.Context
 import android.net.Uri
-import com.dudhs.budgetorganizer.helpers.Transaction
+import com.dudhs.budgetorganizer.dataClasses.TransactionDataClass
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -12,8 +12,8 @@ class SmsParser(private val context: Context) {
     var debugRawMessage: String = ""
         private set
 
-    fun readAndParseAlphaBankSms(): List<Transaction> {
-        val transactions = mutableListOf<Transaction>()
+    fun readAndParseAlphaBankSms(): List<TransactionDataClass> {
+        val transactions = mutableListOf<TransactionDataClass>()
         debugRawMessage = ""
 
         val uri = Uri.parse("content://sms/inbox")
@@ -50,7 +50,7 @@ class SmsParser(private val context: Context) {
                             val time = timeFormat.format(Date(timestampMillis))
 
                             transactions.add(
-                                Transaction(
+                                TransactionDataClass(
                                     date,
                                     time,
                                     amount,
@@ -76,7 +76,7 @@ class SmsParser(private val context: Context) {
                             val merchant = merchantMatch.groupValues[1].trimEnd('.', ' ', '\n', '\r')
 
                             transactions.add(
-                                Transaction(
+                                TransactionDataClass(
                                     date,
                                     time,
                                     amount,
@@ -103,7 +103,15 @@ class SmsParser(private val context: Context) {
                         val time = dateTimeMatch.groupValues[2]
                         val merchant = merchantMatch.groupValues[1].trimEnd('.', ' ', '\n', '\r')
 
-                        transactions.add(Transaction(date, time, amount, merchant, timestampMillis))
+                        transactions.add(
+                            TransactionDataClass(
+                                date,
+                                time,
+                                amount,
+                                merchant,
+                                timestampMillis
+                            )
+                        )
                     } else {
                         if (debugRawMessage.isEmpty()) {
                             debugRawMessage = body

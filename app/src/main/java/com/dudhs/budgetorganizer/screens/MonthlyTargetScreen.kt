@@ -1,7 +1,6 @@
 package com.dudhs.budgetorganizer.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -9,53 +8,57 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.dudhs.budgetorganizer.dataClasses.BudgetStateDataClass
+import com.dudhs.budgetorganizer.budgetComponents.MonthlyTargetCard
 import com.dudhs.budgetorganizer.helpers.NotificationHelper
 import com.dudhs.budgetorganizer.PreferencesManager
-import com.dudhs.budgetorganizer.helpers.Transaction
-import com.dudhs.budgetorganizer.helpers.CalendarDates
-import com.dudhs.budgetorganizer.helpers.formatMoney
+import com.dudhs.budgetorganizer.dataClasses.TransactionDataClass
 import com.jaikeerthick.composable_graphs.composables.pie.PieChart
 import com.jaikeerthick.composable_graphs.composables.pie.model.PieData
 
 
-
+//@Preview(showBackground = true, name = "Light Mode")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MonthlyTargetScreen(
-    allTransactions: List<Transaction>,
-    monthlyTarget: Float,
+    uiState: BudgetStateDataClass,
     notificationHelper: NotificationHelper,
     preferencesManager: PreferencesManager,
-    chartStyle: ChartStyle
+    onTransactionClick: (TransactionDataClass) -> Unit,
 ) {
     var showDetails by remember { mutableStateOf(false) }
 
     if (showDetails) {
         TransactionListScreen(
-            transactions = allTransactions,
-            onBack = { showDetails = false }
+            transactions = uiState.transactions,
+            onBack = { showDetails = false },
+            onTransactionClick = onTransactionClick
         )
     } else {
         val colorScheme = MaterialTheme.colorScheme
-        val thisMonthTransactions = allTransactions.filter {
-            it.timestamp >= CalendarDates.getStartOfCurrentMonthMillis()
+        val thisMonthTransactions = uiState.transactions.filter {
+            it.timestamp >= uiState.effectiveStartMillis
         }
 
         val spent = thisMonthTransactions.sumOf { it.amount.toDoubleOrNull() ?: 0.0 }.toFloat().coerceAtLeast(0f)
-        val remaining = (monthlyTarget - spent).coerceAtLeast(0f)
-        val progress = if (monthlyTarget > 0f) (spent / monthlyTarget).coerceIn(0f, 1f) else 0f
-        val isOverTarget = monthlyTarget > 0f && spent > monthlyTarget
+        val remaining = (uiState.monthlyTarget - spent).coerceAtLeast(0f)
+        val progress = if (uiState.monthlyTarget > 0f) (spent / uiState.monthlyTarget).coerceIn(0f, 1f) else 0f
+        val isOverTarget = uiState.monthlyTarget > 0f && spent > uiState.monthlyTarget
         val spentColor = if (isOverTarget) colorScheme.error else colorScheme.primary
         val remainingColor = Color(0xFF2E7D32)
 
 
-        LaunchedEffect(spent, monthlyTarget) {
+        LaunchedEffect(spent, uiState.monthlyTarget) {
             preferencesManager.setTrackedSpentThisMonth(spent)
 
-            if (monthlyTarget > 0 && spent >= (monthlyTarget / 2)) {
-                if (!preferencesManager.isHalfwayWarningSent()) {
-                    notificationHelper.showHalfwayWarning(spent, monthlyTarget)
-                    preferencesManager.setHalfwayWarningSent(true)
+            if (uiState.monthlyTarget > 0) {
+                val percent = ((spent / uiState.monthlyTarget) * 100).toInt()
+                val currentTier = (percent / 10) * 10
+                val lastNotifiedTier = preferencesManager.getLastNotifiedTier()
+                
+                if (currentTier >= 10 && currentTier > lastNotifiedTier) {
+                    notificationHelper.showProgressWarning(spent, uiState.monthlyTarget, currentTier)
+                    preferencesManager.setLastNotifiedTier(currentTier)
                 }
             }
         }
@@ -80,27 +83,13 @@ fun MonthlyTargetScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            ElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.elevatedCardColors(containerColor = colorScheme.surfaceVariant)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(text = "Spending limit", style = MaterialTheme.typography.labelLarge, color = colorScheme.onSurfaceVariant)
-                    Text(text = formatMoney(monthlyTarget), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        GoalMetric("Spent", formatMoney(spent), spentColor)
-                        GoalMetric("Remaining", formatMoney(remaining), remainingColor)
-                    }
-                }
-            }
+             MonthlyTargetCard(
+                monthlyTarget = uiState.monthlyTarget,
+                spent = spent,
+                remaining = remaining,
+                spentColor = spentColor,
+                remainingColor = remainingColor
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -108,11 +97,11 @@ fun MonthlyTargetScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            if (monthlyTarget == 0f) {
+            if (uiState.monthlyTarget == 0f) {
                 Text("Set a spending limit in Settings.", color = colorScheme.onSurfaceVariant)
             } else if (thisMonthTransactions.isEmpty()) {
                 Text("No transactions this month.", color = colorScheme.onSurfaceVariant)
-            } else if (chartStyle == ChartStyle.PIE) {
+            } else if (uiState.chartStyle == ChartStyle.PIE) {
                 PieChart(modifier = Modifier.size(250.dp), data = pieChartData)
             } else {
                 Column(

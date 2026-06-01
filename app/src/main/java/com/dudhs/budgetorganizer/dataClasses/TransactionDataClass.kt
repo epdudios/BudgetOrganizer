@@ -1,6 +1,6 @@
-package com.dudhs.budgetorganizer.helpers
+package com.dudhs.budgetorganizer.dataClasses
 
-data class Transaction(
+data class TransactionDataClass(
     val date: String,
     val time: String,
     val amount: String,

@@ -1,16 +1,16 @@
-package com.dudhs.budgetorganizer
+package com.dudhs.budgetorganizer.smsModifiers
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
+import com.dudhs.budgetorganizer.PreferencesManager
 import com.dudhs.budgetorganizer.helpers.NotificationHelper
 
 class SmsReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Telephony.Sms.Intents.SMS_RECEIVED_ACTION) {
             val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
-
             val prefs = PreferencesManager(context)
             val notificationHelper = NotificationHelper(context)
 
@@ -18,7 +18,6 @@ class SmsReceiver : BroadcastReceiver() {
                 val sender = sms.displayOriginatingAddress
                 if (sender?.contains("ALPHA", ignoreCase = true) == true) {
                     val body = sms.displayMessageBody ?: ""
-
                     var expenseAmount = 0f
 
                     val amountRegex = Regex("([\\d.,]+)\\s*[EΕ]UR|[EΕ]UR\\s*([\\d.,]+)", RegexOption.IGNORE_CASE)
@@ -38,14 +37,19 @@ class SmsReceiver : BroadcastReceiver() {
 
                     if (expenseAmount > 0f) {
                         prefs.addTrackedExpense(expenseAmount)
-
                         val currentSpent = prefs.getTrackedSpentThisMonth()
                         val target = prefs.getMonthlyTarget()
 
-                        if (target > 0 && currentSpent >= (target / 2)) {
-                            if (!prefs.isHalfwayWarningSent()) {
-                                notificationHelper.showHalfwayWarning(currentSpent, target)
-                                prefs.setHalfwayWarningSent(true)
+                        notificationHelper.showTestNotification()
+
+                        if (target > 0) {
+                            val percent = ((currentSpent / target) * 100).toInt()
+                            val currentTier = (percent / 10) * 10
+                            val lastNotifiedTier = prefs.getLastNotifiedTier()
+
+                            if (currentTier >= 10 && currentTier > lastNotifiedTier) {
+                                notificationHelper.showProgressWarning(currentSpent, target, currentTier)
+                                prefs.setLastNotifiedTier(currentTier)
                             }
                         }
                     }
