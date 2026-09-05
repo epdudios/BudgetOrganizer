@@ -10,6 +10,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.dudhs.budgetorganizer.dataClasses.BudgetStateDataClass
 import com.dudhs.budgetorganizer.budgetComponents.MainBudgetScreenOverviewCard
+import com.dudhs.budgetorganizer.dataClasses.ChartStyle
 import com.dudhs.budgetorganizer.helpers.TimePeriod
 import com.jaikeerthick.composable_graphs.composables.pie.PieChart
 import com.jaikeerthick.composable_graphs.composables.pie.model.PieData
@@ -62,8 +63,18 @@ fun MainBudgetScreen(
         PieData(value = spent.coerceAtLeast(0.01f), label = "Spent", color = spentColor),
         PieData(value = remaining.coerceAtLeast(0.01f), label = "Remaining", color = remainingColor)
     )
+    var showDetails by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+    if (showDetails) {
+        TransactionListScreen(
+            transactions = uiState.transactions,
+            onBack = { showDetails = false },
+            onTransactionClick = {}
+        )
+        return
+    }
+
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Top) {
         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
         ) {
             periods.forEachIndexed { index, period ->
@@ -83,12 +94,11 @@ fun MainBudgetScreen(
             spent = spent,
             remaining = remaining,
             spentColor = spentColor,
-            remainingColor = remainingColor
+            remainingColor = remainingColor,
+            onClick = { showDetails = true }
+
         )
 
-//        Spacer(modifier = Modifier.height(20.dp))
-//
-//        Spacer(modifier = Modifier.height(20.dp))
         Spacer(modifier = Modifier.height(24.dp))
 
         if (isOverBudget) {

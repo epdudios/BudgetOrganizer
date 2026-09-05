@@ -5,8 +5,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.dudhs.budgetorganizer.dataClasses.BudgetStateDataClass
+import com.dudhs.budgetorganizer.dataClasses.ChartStyle
 import com.dudhs.budgetorganizer.dataClasses.TransactionDataClass
-import com.dudhs.budgetorganizer.screens.ChartStyle
 import com.dudhs.budgetorganizer.screens.MainBudgetScreen
 
 @Preview(showBackground = true, name = "Main Budget Screen - Light Mode")

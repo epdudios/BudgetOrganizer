@@ -97,12 +97,23 @@ class PreferencesManager(context: Context) {
             }.timeInMillis
         }
     }
-    // --- Notification ---
     fun getLastNotifiedTier(): Int {
         return prefs.getInt("last_notified_tier", 0)
     }
 
     fun setLastNotifiedTier(tier: Int) {
         prefs.edit().putInt("last_notified_tier", tier).apply()
+    }
+
+    fun getManualBalanceAdjustment(): Float = prefs.getFloat("balance_adjustment", 0f)
+
+    fun setBalanceToTarget(targetValue: Float, currentCalculated: Float) {
+        val delta = targetValue - currentCalculated
+        prefs.edit().putFloat("balance_adjustment", getManualBalanceAdjustment() + delta).apply()
+    }
+
+    fun getAppTheme(): String = prefs.getString("app_theme", "LIGHT") ?: "LIGHT"
+    fun setAppTheme(themeName: String) {
+        prefs.edit().putString("app_theme", themeName).apply()
     }
 }

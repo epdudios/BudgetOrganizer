@@ -45,13 +45,14 @@ class LifeSavingsLogic(private val preferencesManager: PreferencesManager) {
         val baseSalary = preferencesManager.getSalary()
         val globalSuddenIncome = preferencesManager.getSuddenIncome()
         val globalSuddenExpense = preferencesManager.getSuddenExpense()
+        val manualAdjustment = preferencesManager.getManualBalanceAdjustment()
 
         val monthsCount = calculateInclusiveMonthsFromFirstTransaction(transactions)
         val totalExpectedIncome = (baseSalary * monthsCount) + globalSuddenIncome
         val totalSmsSpent = transactions.sumOf { it.amount.toDoubleOrNull() ?: 0.0 }.toFloat()
         val totalSpent = totalSmsSpent + globalSuddenExpense
 
-        return (totalExpectedIncome - totalSpent).coerceAtLeast(0f)
+        return (totalExpectedIncome - totalSpent + manualAdjustment).coerceAtLeast(0f)
     }
 
     private fun calculateInclusiveMonthsFromFirstTransaction(transactions: List<TransactionDataClass>): Int {

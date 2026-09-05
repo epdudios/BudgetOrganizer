@@ -3,6 +3,7 @@ package com.dudhs.budgetorganizer.smsModifiers
 import android.content.Context
 import android.net.Uri
 import com.dudhs.budgetorganizer.dataClasses.TransactionDataClass
+import com.dudhs.budgetorganizer.helpers.normalizeAmount
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -21,7 +22,6 @@ class SmsParser(private val context: Context) {
 
         val cursor = context.contentResolver.query(uri, projection, null, null, "date DESC")
 
-        // Used for messages that don't have a date in the body
         val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
@@ -43,9 +43,8 @@ class SmsParser(private val context: Context) {
                         val merchantMatch = Regex("ΔIKAIOYXO (.*)").find(body)
 
                         if (amountMatch != null && merchantMatch != null) {
-                            val amount = amountMatch.groupValues[1].replace(".", "").replace(",", ".")
+                            val amount = normalizeAmount(amountMatch.groupValues[1])
                             val merchant = merchantMatch.groupValues[1].trimEnd('.', ' ', '\n', '\r')
-                            // Transfer SMS doesn't have a date string, so we generate it from metadata
                             val date = dateFormat.format(Date(timestampMillis))
                             val time = timeFormat.format(Date(timestampMillis))
 
@@ -68,7 +67,7 @@ class SmsParser(private val context: Context) {
                         val merchantMatch = Regex("@\\s*(.*?)(?:ΔΙΑΘΕΣΙΜΟ|\$)", RegexOption.IGNORE_CASE).find(body)
 
                         if (amountMatch != null && dateTimeMatch != null && merchantMatch != null) {
-                            val amountRaw = amountMatch.groupValues[1].replace(".", "").replace(",", ".")
+                            val amountRaw = normalizeAmount(amountMatch.groupValues[1])
 
                             val amount = "-$amountRaw"
                             val date = dateTimeMatch.groupValues[1]
@@ -98,7 +97,7 @@ class SmsParser(private val context: Context) {
 
                     if (amountMatch != null && dateTimeMatch != null && merchantMatch != null) {
                         val rawAmount = amountMatch.groupValues[1].ifEmpty { amountMatch.groupValues[2] }
-                        val amount = rawAmount.replace(".", "").replace(",", ".")
+                        val amount = normalizeAmount(rawAmount)
                         val date = dateTimeMatch.groupValues[1]
                         val time = dateTimeMatch.groupValues[2]
                         val merchant = merchantMatch.groupValues[1].trimEnd('.', ' ', '\n', '\r')

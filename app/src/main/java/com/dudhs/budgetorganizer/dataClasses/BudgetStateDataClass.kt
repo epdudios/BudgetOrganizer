@@ -1,6 +1,5 @@
 package com.dudhs.budgetorganizer.dataClasses
 
-import com.dudhs.budgetorganizer.screens.ChartStyle
 
 data class BudgetStateDataClass(
     val transactions: List<TransactionDataClass>,

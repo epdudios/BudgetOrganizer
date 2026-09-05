@@ -12,6 +12,7 @@ import com.dudhs.budgetorganizer.dataClasses.BudgetStateDataClass
 import com.dudhs.budgetorganizer.budgetComponents.MonthlyTargetCard
 import com.dudhs.budgetorganizer.helpers.NotificationHelper
 import com.dudhs.budgetorganizer.PreferencesManager
+import com.dudhs.budgetorganizer.dataClasses.ChartStyle
 import com.dudhs.budgetorganizer.dataClasses.TransactionDataClass
 import com.jaikeerthick.composable_graphs.composables.pie.PieChart
 import com.jaikeerthick.composable_graphs.composables.pie.model.PieData
@@ -55,7 +56,7 @@ fun MonthlyTargetScreen(
                 val percent = ((spent / uiState.monthlyTarget) * 100).toInt()
                 val currentTier = (percent / 10) * 10
                 val lastNotifiedTier = preferencesManager.getLastNotifiedTier()
-                
+
                 if (currentTier >= 10 && currentTier > lastNotifiedTier) {
                     notificationHelper.showProgressWarning(spent, uiState.monthlyTarget, currentTier)
                     preferencesManager.setLastNotifiedTier(currentTier)
@@ -73,7 +74,7 @@ fun MonthlyTargetScreen(
                 .fillMaxSize()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Top
         ) {
             Text(
                 text = "Monthly Goal",

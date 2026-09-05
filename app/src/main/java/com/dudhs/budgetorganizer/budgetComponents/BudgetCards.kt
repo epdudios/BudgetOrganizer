@@ -1,5 +1,6 @@
 package com.dudhs.budgetorganizer.budgetComponents
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -19,11 +20,12 @@ fun MainBudgetScreenOverviewCard(
     spent: Float,
     remaining: Float,
     spentColor: Color,
-    remainingColor: Color
+    remainingColor: Color,
+    onClick: () -> Unit = {}
 ) {
     val colorScheme = MaterialTheme.colorScheme
     ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = colorScheme.surfaceVariant)
     ) {
@@ -48,11 +50,12 @@ fun MonthlyTargetCard(
     spent: Float,
     remaining: Float,
     spentColor: Color,
-    remainingColor: Color
+    remainingColor: Color,
+    onClick: () -> Unit = {}
 ) {
     val colorScheme = MaterialTheme.colorScheme
     ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = colorScheme.surfaceVariant)
     ) {

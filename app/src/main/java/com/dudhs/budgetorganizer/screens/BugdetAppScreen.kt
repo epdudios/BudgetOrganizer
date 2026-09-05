@@ -14,14 +14,23 @@ import com.dudhs.budgetorganizer.helpers.LifeSavingsLogic
 import com.dudhs.budgetorganizer.helpers.NotificationHelper
 import com.dudhs.budgetorganizer.PreferencesManager
 import com.dudhs.budgetorganizer.dataClasses.TransactionDataClass
+import androidx.compose.foundation.Image
+import com.dudhs.budgetorganizer.R
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import com.dudhs.budgetorganizer.dataClasses.ChartStyle
+import com.dudhs.budgetorganizer.dataClasses.SettingsActions
+import com.dudhs.budgetorganizer.ui.theme.AppTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BudgetAppScreen(
     transactions: List<TransactionDataClass>,
     preferencesManager: PreferencesManager,
     notificationHelper: NotificationHelper,
-    onTransactionClick: (TransactionDataClass) -> Unit
-    //onExportClick: () -> Unit
+    onTransactionClick: (TransactionDataClass) -> Unit,
+    onThemeChange: (AppTheme) -> Unit
+
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -31,11 +40,12 @@ fun BudgetAppScreen(
     var currentMonthlyTarget by remember { mutableFloatStateOf(preferencesManager.getMonthlyTarget()) }
     var currentChartStyle by remember { mutableStateOf(ChartStyle.valueOf(preferencesManager.getChartStyle()))}
     val lifeSavingsLogic = remember(preferencesManager) { LifeSavingsLogic(preferencesManager) }
-    val estimatedBankBalance by remember(transactions, currentSalary, currentSuddenIncome, currentSuddenExpense) {
-        derivedStateOf { lifeSavingsLogic.calculateTotalLifeSavings(transactions) }
-    }
+    var balanceAdjustmentTrigger by remember { mutableIntStateOf(0) }
+    val estimatedBankBalance by remember(transactions, currentSalary, currentSuddenIncome, currentSuddenExpense, balanceAdjustmentTrigger) {
+        derivedStateOf { lifeSavingsLogic.calculateTotalLifeSavings(transactions) } }
     var isManualRefresh by remember { mutableStateOf(preferencesManager.isManualRefreshEnabled()) }
     var effectiveStartMillis by remember { mutableLongStateOf(preferencesManager.getEffectiveStartMillis()) }
+    var currentAppTheme by remember { mutableStateOf(AppTheme.valueOf(preferencesManager.getAppTheme())) }
 
     val uiState = BudgetStateDataClass(
         transactions = transactions,
@@ -50,6 +60,17 @@ fun BudgetAppScreen(
     )
 
     Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Image(
+                        painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                        contentDescription = "Logo",
+                        modifier = Modifier.height(36.dp)
+                    )
+                }
+            )
+        },
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(
@@ -73,25 +94,34 @@ fun BudgetAppScreen(
             }
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.TopCenter) {
             when (selectedTab) {
-                // LOOK HOW CLEAN THIS IS NOW!
                 0 -> MainBudgetScreen(uiState = uiState)
                 1 -> MonthlyTargetScreen(
                     uiState = uiState,
                     notificationHelper = notificationHelper,
                     preferencesManager = preferencesManager,
                     onTransactionClick = onTransactionClick
+
+
                 )
                 2 -> SettingsScreen(
                     uiState = uiState,
-                    onSalaryChange = { preferencesManager.setSalary(it); currentSalary = it},
-                    onAddIncome = { preferencesManager.addSuddenIncome(it); currentSuddenIncome += it},
-                    onAddExpense = { preferencesManager.addSuddenExpense(it); currentSuddenExpense += it},
-                    onMonthlyTarget = { preferencesManager.setMonthlyTarget(it); currentMonthlyTarget = it},
-                    onChartStyleChange = { newStyle -> currentChartStyle = newStyle; preferencesManager.setChartStyle(newStyle.name)},
-                    onToggleManualRefresh = { enabled -> preferencesManager.setManualRefreshEnabled(enabled); isManualRefresh = enabled; effectiveStartMillis = preferencesManager.getEffectiveStartMillis()},
-                    onManualReset = { preferencesManager.performManualReset(); currentSuddenIncome = 0f; currentSuddenExpense = 0f; effectiveStartMillis = preferencesManager.getEffectiveStartMillis()}
+                    currentAppTheme = currentAppTheme,
+                    actions = SettingsActions(
+                        onSalaryChange = { preferencesManager.setSalary(it); currentSalary = it },
+                        onAddIncome = { preferencesManager.addSuddenIncome(it); currentSuddenIncome += it },
+                        onAddExpense = { preferencesManager.addSuddenExpense(it); currentSuddenExpense += it },
+                        onMonthlyTarget = {preferencesManager.setMonthlyTarget(it); currentMonthlyTarget = it },
+                        onSetBalance = { target ->preferencesManager.setBalanceToTarget(target,lifeSavingsLogic.calculateTotalLifeSavings(transactions))
+                            balanceAdjustmentTrigger++},
+                        onChartStyleChange = {currentChartStyle = it; preferencesManager.setChartStyle(it.name) },
+                        onThemeChange = { currentAppTheme = it; onThemeChange(it) },
+                        onToggleManualRefresh = { enabled ->preferencesManager.setManualRefreshEnabled(enabled);isManualRefresh = enabled;effectiveStartMillis = preferencesManager.getEffectiveStartMillis() },
+                        onManualReset = {preferencesManager.performManualReset()
+                            currentSuddenIncome = 0f;currentSuddenExpense = 0f;effectiveStartMillis = preferencesManager.getEffectiveStartMillis()
+                        }
+                    )
                 )
                 }
             }

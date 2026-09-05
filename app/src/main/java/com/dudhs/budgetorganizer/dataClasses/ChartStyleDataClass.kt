@@ -1,4 +1,5 @@
 package com.dudhs.budgetorganizer.dataClasses
 
-class ChartStyleDataClass {
+enum class ChartStyle(val label: String) {
+    PIE("Pie"), PROGRESS("Progress")
 }
