@@ -2,6 +2,7 @@ package com.dudhs.budgetorganizer.smsModifiers
 
 import android.content.Context
 import android.net.Uri
+import com.dudhs.budgetorganizer.PreferencesManager
 import com.dudhs.budgetorganizer.dataClasses.TransactionDataClass
 import com.dudhs.budgetorganizer.helpers.normalizeAmount
 import java.text.SimpleDateFormat
@@ -10,8 +11,9 @@ import java.util.Locale
 
 class SmsParser(private val context: Context) {
 
-    var debugRawMessage: String = ""
-        private set
+    var debugRawMessage: String = "" ;private set
+    private val prefsManager = PreferencesManager(context)
+
 
     fun readAndParseAlphaBankSms(): List<TransactionDataClass> {
         val transactions = mutableListOf<TransactionDataClass>()
@@ -29,11 +31,12 @@ class SmsParser(private val context: Context) {
             val addressIndex = it.getColumnIndexOrThrow("address")
             val bodyIndex = it.getColumnIndexOrThrow("body")
             val dateIndex = it.getColumnIndexOrThrow("date")
+            val bankNames = prefsManager.getBankNames()
 
             while (it.moveToNext()) {
                 val address = it.getString(addressIndex) ?: ""
 
-                if (address.contains("ALPHA", ignoreCase = true)) {
+                if (bankNames.any { address.contains(it, ignoreCase = true) }) {
                     val body = it.getString(bodyIndex) ?: ""
                     val timestampMillis = it.getLong(dateIndex)
 

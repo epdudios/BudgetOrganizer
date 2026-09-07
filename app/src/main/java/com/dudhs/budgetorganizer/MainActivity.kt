@@ -23,16 +23,19 @@ import com.dudhs.budgetorganizer.ui.theme.AppTheme
 import com.dudhs.budgetorganizer.ui.theme.BudgetOrganizerTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import com.dudhs.budgetorganizer.screens.OnboardingScreen
 
 class MainActivity : AppCompatActivity() {
 
     private val SMS_PERMISSION_CODE = 101
     private val NOTIFICATION_PERMISSION_CODE = 102
+    val SKIP_ONBOARDING_FOR_TESTING = false
 
 
     private lateinit var smsParser: SmsParser
     private lateinit var prefsManager: PreferencesManager
     private lateinit var notificationHelper: NotificationHelper
+
 
     private var transactionsList: List<TransactionDataClass> = emptyList()
 
@@ -43,6 +46,28 @@ class MainActivity : AppCompatActivity() {
         prefsManager = PreferencesManager(this)
         notificationHelper = NotificationHelper(this)
 
+
+        if (!prefsManager.isOnboardingComplete() && !SKIP_ONBOARDING_FOR_TESTING) {
+            setContent {
+                BudgetOrganizerTheme(appTheme = AppTheme.valueOf(prefsManager.getAppTheme())) {
+                    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                        OnboardingScreen(onFinished = { result ->
+                            prefsManager.setSalary(result.monthlyIncome)
+                            prefsManager.setMonthlyTarget(result.monthlyTarget)
+                            prefsManager.setBankNames(listOf(result.bankName))
+                            prefsManager.setOnboardingComplete(true)
+                            startMainFlow()
+                        })
+                    }
+                }
+            }
+            return
+        }
+
+        startMainFlow()
+    }
+
+    private fun startMainFlow() {
         if (checkSmsPermission()) {
             transactionsList = smsParser.readAndParseAlphaBankSms()
             renderComposeUI()

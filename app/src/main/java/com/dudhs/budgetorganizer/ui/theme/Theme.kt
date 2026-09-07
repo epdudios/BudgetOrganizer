@@ -35,7 +35,7 @@ private val BudgetLightColorScheme = lightColorScheme(
     onSurface = Color(0xFF1A1C1E),
     surfaceVariant = Color(0xFFE0E7F0),
     onSurfaceVariant = Color(0xFF43474E),
-    surfaceTint = Blue40,
+    surfaceTint = ExpenseRed,
 
     surfaceContainerLowest = Color(0xFFFFFFFF),
     surfaceContainerLow = Color(0xFFF2F5FA),

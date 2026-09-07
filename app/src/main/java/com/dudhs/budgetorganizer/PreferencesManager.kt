@@ -116,4 +116,45 @@ class PreferencesManager(context: Context) {
     fun setAppTheme(themeName: String) {
         prefs.edit().putString("app_theme", themeName).apply()
     }
+
+    fun getManualMemberships(): Set<String> =
+        prefs.getStringSet("manual_memberships", emptySet()) ?: emptySet()
+
+    fun addManualMembership(merchant: String) {
+        val updated = getManualMemberships() + merchant.trim()
+        prefs.edit().putStringSet("manual_memberships", updated).apply()
+    }
+
+    fun removeManualMembership(merchant: String) {
+        val updated = getManualMemberships() - merchant.trim()
+        prefs.edit().putStringSet("manual_memberships", updated).apply()
+    }
+
+    fun getIgnoredMemberships(): Set<String> =
+        prefs.getStringSet("ignored_memberships", emptySet()) ?: emptySet()
+
+    fun addIgnoredMembership(merchant: String) {
+        val updated = getIgnoredMemberships() + merchant.trim().uppercase()
+        prefs.edit().putStringSet("ignored_memberships", updated).apply()
+    }
+
+    // --- Onboarding & banks ---
+    fun isOnboardingComplete(): Boolean = prefs.getBoolean("onboarding_complete", false)
+    fun setOnboardingComplete(complete: Boolean) {
+        prefs.edit().putBoolean("onboarding_complete", complete).apply()
+    }
+
+    fun getBankNames(): List<String> {
+        val raw = prefs.getString("bank_names", "ALPHA") ?: "ALPHA"
+        return raw.split(",").map { it.trim() }.filter { it.isNotBlank() }
+    }
+
+    fun addBankName(name: String) {
+        val updated = (getBankNames() + name.trim()).distinct()
+        prefs.edit().putString("bank_names", updated.joinToString(",")).apply()
+    }
+
+    fun setBankNames(names: List<String>) {
+        prefs.edit().putString("bank_names", names.joinToString(",")).apply()
+    }
 }

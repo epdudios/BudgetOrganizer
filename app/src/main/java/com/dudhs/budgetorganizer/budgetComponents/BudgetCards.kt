@@ -37,7 +37,7 @@ fun MainBudgetScreenOverviewCard(
             Spacer(modifier = Modifier.height(16.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 BudgetMetric("Monthly Budget", formatMoney(totalBudget), colorScheme.onSurface)
-                BudgetMetric("Spent", formatMoney(spent), spentColor)
+                BudgetMetric("Spent", formatMoney(spent), color = colorScheme.surfaceTint)
                 BudgetMetric("Bank balance", formatMoney(estimatedBankBalance), colorScheme.onSurface)
             }
         }
@@ -53,6 +53,7 @@ fun MonthlyTargetCard(
     remainingColor: Color,
     onClick: () -> Unit = {}
 ) {
+
     val colorScheme = MaterialTheme.colorScheme
     ElevatedCard(
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
@@ -64,7 +65,7 @@ fun MonthlyTargetCard(
             Text(formatMoney(monthlyTarget), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
             Spacer(modifier = Modifier.height(12.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                BudgetMetric("Spent", formatMoney(spent), spentColor)
+                BudgetMetric("Spent", formatMoney(spent), color = colorScheme.surfaceTint)
                 BudgetMetric("Remaining", formatMoney(remaining), remainingColor)
             }
         }

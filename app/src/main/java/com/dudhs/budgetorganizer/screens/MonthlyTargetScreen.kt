@@ -65,7 +65,7 @@ fun MonthlyTargetScreen(
         }
 
         val pieChartData = listOf(
-            PieData(value = spent.coerceAtLeast(0.01f), label = "Spent", color = spentColor),
+            PieData(value = spent.coerceAtLeast(0.01f), label = "Spent", color = colorScheme.surfaceTint),
             PieData(value = remaining.coerceAtLeast(0.01f), label = "Remaining", color = remainingColor)
         )
 
@@ -120,7 +120,7 @@ fun MonthlyTargetScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(12.dp),
-                        color = spentColor,
+                        color = colorScheme.surfaceTint,
                         trackColor = colorScheme.surfaceVariant
                     )
                 }
@@ -130,6 +130,17 @@ fun MonthlyTargetScreen(
 
             Button(onClick = { showDetails = true }) {
                 Text("See Transactions")
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Button(onClick = { showDetails = true }) {
+                    Text("See Transactions")
+                }
+                OutlinedButton(onClick = { notificationHelper.showTestNotification() }) {
+                    Text("Test Notification")
+                }
             }
         }
     }

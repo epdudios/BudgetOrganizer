@@ -18,7 +18,9 @@ class SmsReceiver : BroadcastReceiver() {
 
             for (sms in messages) {
                 val sender = sms.displayOriginatingAddress
-                if (sender?.contains("ALPHA", ignoreCase = true) == true) {
+                val bankNames = prefs.getBankNames()
+
+                if (sender != null && bankNames.any { sender.contains(it, ignoreCase = true) }) {
                     val body = sms.displayMessageBody ?: ""
                     var expenseAmount = 0f
 

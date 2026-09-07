@@ -96,7 +96,7 @@ fun BudgetAppScreen(
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.TopCenter) {
             when (selectedTab) {
-                0 -> MainBudgetScreen(uiState = uiState)
+                0 -> MainBudgetScreen(uiState = uiState, preferencesManager= preferencesManager)
                 1 -> MonthlyTargetScreen(
                     uiState = uiState,
                     notificationHelper = notificationHelper,
@@ -119,8 +119,8 @@ fun BudgetAppScreen(
                         onThemeChange = { currentAppTheme = it; onThemeChange(it) },
                         onToggleManualRefresh = { enabled ->preferencesManager.setManualRefreshEnabled(enabled);isManualRefresh = enabled;effectiveStartMillis = preferencesManager.getEffectiveStartMillis() },
                         onManualReset = {preferencesManager.performManualReset()
-                            currentSuddenIncome = 0f;currentSuddenExpense = 0f;effectiveStartMillis = preferencesManager.getEffectiveStartMillis()
-                        }
+                            currentSuddenIncome = 0f;currentSuddenExpense = 0f;effectiveStartMillis = preferencesManager.getEffectiveStartMillis()},
+                        onAddBank = {preferencesManager.addBankName(name = it)}
                     )
                 )
                 }

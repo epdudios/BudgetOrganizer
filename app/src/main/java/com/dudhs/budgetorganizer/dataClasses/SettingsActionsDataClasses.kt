@@ -12,5 +12,6 @@ data class SettingsActions(
     val onChartStyleChange: (ChartStyle) -> Unit,
     val onThemeChange: (AppTheme) -> Unit,
     val onToggleManualRefresh: (Boolean) -> Unit,
-    val onManualReset: () -> Unit
+    val onManualReset: () -> Unit,
+    val onAddBank: (String) -> Unit
 )

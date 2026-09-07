@@ -23,6 +23,8 @@ import com.dudhs.budgetorganizer.dataClasses.BudgetStateDataClass
 import com.dudhs.budgetorganizer.dataClasses.ChartStyle
 import com.dudhs.budgetorganizer.dataClasses.SettingsActions
 import com.dudhs.budgetorganizer.helpers.formatMoney
+import com.dudhs.budgetorganizer.screens.components.SettingsDialog
+import com.dudhs.budgetorganizer.screens.components.SettingsDialogHost
 import com.dudhs.budgetorganizer.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,6 +95,12 @@ fun SettingsScreen(
                 title = "Set Bank Balance",
                 subtitle = "Override to: ${formatMoney(uiState.estimatedBankBalance)}",
                 onClick = { activeDialog = SettingsDialog.BankBalance }
+            )
+            VariableItem(
+                icon = Icons.Default.AccountBox,
+                title = "Banks",
+                subtitle = "Add another bank sender",
+                onClick = { activeDialog = SettingsDialog.AddBank }
             )
         }
 
